@@ -1,0 +1,21 @@
+[Unit]
+Description=balancedlinks
+After=network.target
+Before=runlevel2.target shutdown.target
+
+[Service]
+User=root
+Group=root
+Type=forking
+Restart=no
+TimeoutSec=5min
+IgnoreSIGPIPE=no
+KillMode=process
+GuessMainPID=no
+RemainAfterExit=yes
+ 
+ExecStart=/sbin/balancedlinks_start
+ExecStop=/sbin/balancedlinks_stop
+ 
+[Install]
+WantedBy=multi-user.target

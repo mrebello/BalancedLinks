@@ -1,0 +1,41 @@
+#!/bin/bash
+
+[ -e /etc/balancedlinks.conf ] && . /etc/balancedlinks.conf
+
+rm -f $link_file
+
+## if use DHCP and no DHCP IP is leased, assign an IP only for add route rules
+#if [ "`ifconfig $eth1 | grep "end\." | cut -d " " -f 13`" == "" ]; then
+#  $IP addr add $NET_eth1 dev $eth1
+#fi  
+#if [ "`ifconfig $eth2 | grep "end\." | cut -d " " -f 13`" == "" ]; then
+#  $IP addr add $NET_eth2 dev $eth2
+#fi  
+
+#-----------
+#Route rules
+#-----------
+$IP rule flush table 1
+$IP rule flush table 2
+$IP rule flush table 3
+$IP route flush table 1
+$IP route flush table 2
+$IP route flush table 3
+
+# remove default gw
+$IP route del default
+$IP route flush cache
+
+$IP rule add from $NET_eth1 table 1 prio 33001
+$IP rule add from $NET_eth2 table 2 prio 33002
+$IP rule add table 3 prio 33004
+
+$IP route add table 1 default via $GW_eth1
+$IP route add table 2 default via $GW_eth2 
+$IP route add table 3 default \
+    nexthop via $GW_eth2 weight $weight1 dev $eth2 \
+    nexthop via $GW_eth1 weight $weight2 dev $eth1
+
+if [ $time_to_check -gt 0 ]; then
+  daemon -n balancedlinks -r -L $time_to_check $checkscript
+fi

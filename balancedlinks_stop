@@ -1,0 +1,20 @@
+#!/bin/bash
+
+[ -e /etc/balancedlinks.conf ] && . /etc/balancedlinks.conf
+
+#-----------
+#Route rules
+#-----------
+$IP rule flush table 1
+$IP rule flush table 2
+$IP rule flush table 3
+$IP route flush table 1
+$IP route flush table 2
+$IP route flush table 3
+
+if [ $time_to_check -gt 0 ]; then
+  daemon -n balancedlinks --stop
+fi
+
+# set default gateway to $GW_eth1
+$IP route add default via $GW_eth1
