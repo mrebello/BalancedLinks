@@ -32,10 +32,13 @@ O rotemento padrão (tabela **default**) é excluído.
 São criadas 2 tabelas para o roteamento por cada um dos gateways, e uma terceira tabela para o roteamento balanceado entre os dois gateways.<br>
 As tabelas usadas foram colocadas com prioridade superior à 32766 (padrão da tabela main).
 
-Pacotes provenientes do IP da rede da interface 1 são roteados pela interface 1 através da **tabela 1**, com prioridade **33001**.
+Pacotes vinculados à interface 1 são roteados pela interface 1 através da **tabela 1**, com prioridade **33001**.
+Pacotes vinculados à interface 2 são roteados pela interface 2 através da **tabela 2**, com prioridade **33002**.
+
+Pacotes provenientes do IP da rede da interface 1 são roteados pela interface 1 através da **tabela 1**, com prioridade **33011**.
 Pacotes provenientes do IP da rede da interface 2 são roteados pela interface 2 através da **tabela 2**, com prioridade **33002**.
 
-A **tabela 3** (prioridade **33004**) é a responsável pelo balanceamento. Ela roteia por qualquer um dos gateways disponíveis, lenvado em consideração o peso (weight).
+A **tabela 3** (prioridade **33099**) é a responsável pelo balanceamento. Ela roteia por qualquer um dos gateways disponíveis, lenvado em consideração o peso (weight).
 
 O peso *ideal* é proporcional à largura de banda dos links.<br>
 Na configuração de exemplo:
@@ -52,8 +55,11 @@ weight2=5
 O timeout do kernel é relativamente grande para detectar queda nos links, então montei um script para verificar as quedas com frequência maior.
 
 
-O script **balancedlinks_check** verifica se os gateways podem ser acessados (pelo ping). O acesso aos gateways é feito pela rota padrão da interface.<br>
-Caso um dos links não esteja disponível, o script adiciona a tabela 1 ou 2 com prioridade 33003 (antes da tabela 3), fazendo com que a rota *padrão* passe a ser a rota da interface da tabela adicionada.
+O script **balancedlinks_check** verifica se os gateways podem ser acessados.
+Via ping, o acesso aos gateways é feito pela rota padrão da interface.<br>
+Via curl, o acesso é vinculado à interface, passando então pelas tabelas com prioridade 33001 e 33002.
+
+Caso um dos links não esteja disponível, o script adiciona a tabela 1 ou 2 com prioridade 33098 (antes da tabela 3), fazendo com que a rota *padrão* passe a ser a rota da interface da tabela adicionada.
 Caso os dois links estejam fora, não há rota que resolva...
 
 ### Visualização da configuração

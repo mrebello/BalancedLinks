@@ -26,12 +26,14 @@ $IP route flush table 3
 $IP route del default
 $IP route flush cache
 
-$IP rule add from $NET_eth1 table 1 prio 33001
-$IP rule add from $NET_eth2 table 2 prio 33002
-$IP rule add table 3 prio 33004
+$IP rule add oif $eth1 table 1 prio 33001
+$IP rule add oif $eth2 table 2 prio 33002
+$IP rule add from $NET_eth1 table 1 prio 33011
+$IP rule add from $NET_eth2 table 2 prio 33012
+$IP rule add table 3 prio 33099
 
 $IP route add table 1 default via $GW_eth1
-$IP route add table 2 default via $GW_eth2 
+$IP route add table 2 default via $GW_eth2
 $IP route add table 3 default \
     nexthop via $GW_eth2 weight $weight1 dev $eth2 \
     nexthop via $GW_eth1 weight $weight2 dev $eth1

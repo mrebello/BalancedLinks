@@ -1,19 +1,26 @@
 #!/bin/bash
+export LC_ALL=C
 
 [ -e /etc/balancedlinks.conf ] && . /etc/balancedlinks.conf
 
 [ -e $link_file ] && . $link_file
 
-I1=`ping $GW_eth1 -c $ping_count -W $ping_wait | grep "0 received"`
-I2=`ping $GW_eth2 -c $ping_count -W $ping_wait | grep "0 received"`
+# to use ping, put the =="" logic
+#I1=`ping $GW_eth1 -c $ping_count -W $ping_wait | grep "0 rece"`
+#I2=`ping $GW_eth2 -c $ping_count -W $ping_wait | grep "0 rece"`
 
-if [ "$I1" == "" ]; then
+# to use curl to retreave a google.com page, put the !="" logic
+I1=`curl -s -S -m 3 --interface $eth1 http://172.217.30.174 2>/dev/stdout | grep "The document has moved"`
+I2=`curl -s -S -m 3 --interface $eth2 http://172.217.30.174 2>/dev/stdout | grep "The document has moved"`
+
+
+if [ "$I1" != "" ]; then
   I1="On";   L1="LA1=\"On\""
 else
   I1="Off";  L1="LA1=\"Off\"" 
 fi
 
-if [ "$I2" == "" ]; then
+if [ "$I2" != "" ]; then
   I2="On";   L2="LA2=\"On\""
 else
   I2="Off";  L2="LA2=\"Off\""
@@ -22,13 +29,13 @@ fi
 if [ "$I1$I2" != "$LA1$LA2" ]; then
   date >> $log_file
   echo "$eth1=$I1, $eth2=$I2." >> $log_file
-  $IP rule del prio 33003
+  $IP rule del prio 33098
   if [ "$I1$I2" == "OffOn" ]; then
-    $IP rule add table 2 prio 33003
+    $IP rule add table 2 prio 33098
   fi
   if [ "$I1$I2" == "OnOff" ]; then
-    $IP rule add table 1 prio 33003
-  fi    
+    $IP rule add table 1 prio 33098
+  fi
 fi
 
 echo $L1 > $link_file
