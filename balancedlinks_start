@@ -24,20 +24,40 @@ $IP route flush table 3
 
 # remove default gw
 $IP route del default
+# for the case when many defaults is defined
+$IP route del default
+$IP route del default
+$IP route del default
+
 $IP route flush cache
 
 $IP rule add oif $eth1 table 1 prio 33001
 $IP rule add oif $eth2 table 2 prio 33002
+
 $IP rule add from $NET_eth1 table 1 prio 33011
 $IP rule add from $NET_eth2 table 2 prio 33012
+
 $IP rule add table 3 prio 33099
 
-$IP route add table 1 default via $GW_eth1
-$IP route add table 2 default via $GW_eth2
+$IP route add table 1 default via $GW_eth1 dev $eth1 $gwopt1
+$IP route add table 2 default via $GW_eth2 dev $eth2 $gwopt2
 $IP route add table 3 default \
-    nexthop via $GW_eth2 weight $weight1 dev $eth2 \
-    nexthop via $GW_eth1 weight $weight2 dev $eth1
+    nexthop via $GW_eth2 weight $weight2 dev $eth2 $gwopt2 \
+    nexthop via $GW_eth1 weight $weight1 dev $eth1 $gwopt1
 
+# if IPTABLES is seted, put rules in mangle
+if [ -n "${IPTABLES}" ]; then
+  $IPTABLES -t mangle -A POSTROUTING -o $eth1 -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x1000
+  $IPTABLES -t mangle -A POSTROUTING -o $eth2 -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x1001
+  $IPTABLES -t mangle -A PREROUTING -i $eth1 -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x1000
+  $IPTABLES -t mangle -A PREROUTING -i $eth2 -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x1001
+  $IPTABLES -t mangle -A PREROUTING -m conntrack --ctstate ESTABLISHED,RELATED -j CONNMARK --restore-mark
+  $IPTABLES -t mangle -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j CONNMARK --restore-mark
+
+  $IP rule add fwmark 0x1000 table 1 prio 33021
+  $IP rule add fwmark 0x1001 table 2 prio 33022
+fi
+    
 if [ $time_to_check -gt 0 ]; then
   daemon -n balancedlinks -r -L $time_to_check $checkscript
 fi

@@ -51,6 +51,9 @@ Como o link 2 é 5 vezes menor que o link 1, a proporção é 1/5:
 weight1=1<br>
 weight2=5
 
+### Regras do IPTABLES
+Também são criadas regras no iptables -t mangle para que todos os pacotes de uma conexão (criada entrando ou saindo) sejam direcionados para a mesma interface.
+
 ### Verificação periódica para queda dos links
 O timeout do kernel é relativamente grande para detectar queda nos links, então montei um script para verificar as quedas com frequência maior.
 

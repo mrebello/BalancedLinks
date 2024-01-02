@@ -2,6 +2,16 @@
 
 [ -e /etc/balancedlinks.conf ] && . /etc/balancedlinks.conf
 
+# if IPTABLES is seted, remove rules in mangle
+if [ -n "${IPTABLES}" ]; then
+  $IPTABLES -t mangle -D POSTROUTING -o $eth1 -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x1000
+  $IPTABLES -t mangle -D POSTROUTING -o $eth2 -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x1001
+  $IPTABLES -t mangle -D PREROUTING -i $eth1 -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x1000
+  $IPTABLES -t mangle -D PREROUTING -i $eth2 -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x1001
+  $IPTABLES -t mangle -D PREROUTING -m conntrack --ctstate ESTABLISHED,RELATED -j CONNMARK --restore-mark
+  $IPTABLES -t mangle -D OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j CONNMARK --restore-mark
+fi
+
 #-----------
 #Route rules
 #-----------
@@ -18,3 +28,4 @@ fi
 
 # set default gateway to $GW_eth1
 $IP route add default via $GW_eth1
+$IP route flush cache
